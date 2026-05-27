@@ -543,13 +543,13 @@
       audio.reverb = new Tone.Reverb({ decay: 12, wet: 0.6 }).connect(audio.master);
       audio.delay = new Tone.FeedbackDelay("8n", 0.5).connect(audio.reverb);
       audio.delay.wet.value = 0.7;
-      audio.filter = new Tone.Filter(2000, "lowpass").connect(audio.delay);
+      audio.filter = new Tone.Filter(6000, "highpass").connect(audio.delay);
 
-      audio.droneGain = new Tone.Gain(0.2).connect(audio.filter);
+      audio.droneGain = new Tone.Gain(0.2).connect(audio.delay);
       audio.drone = new Tone.FatOscillator("C2", "sawtooth", 40).connect(audio.droneGain);
 
       Tone.Transport.bpm.value = 60; 
-      audio.pulseGain = new Tone.Gain(0).connect(audio.filter);
+      audio.pulseGain = new Tone.Gain(0).connect(audio.delay);
       audio.pulseSynth = new Tone.FMSynth({
         harmonicity: 2.5,
         modulationIndex: 5,
@@ -563,7 +563,7 @@
         audio.pulseSynth.triggerAttackRelease("C2", "8n", time);
       }, "4m"); 
 
-      audio.rainGain = new Tone.Gain(0.3).connect(audio.filter);
+      audio.rainGain = new Tone.Gain(0.3).connect(audio.delay);
       audio.rainFilter = new Tone.AutoFilter({ 
         frequency: "2n", 
         baseFrequency: 800, 
@@ -572,23 +572,28 @@
       }).connect(audio.rainGain);
       audio.rain = new Tone.Noise("pink").connect(audio.rainFilter);
 
-      audio.bellGain = new Tone.Gain(0.5).connect(audio.filter);
-      audio.bells = new Tone.PolySynth(Tone.FMSynth, {
-        harmonicity: 3.5,
-        modulationIndex: 20,
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.01, decay: 2, sustain: 0, release: 3 },
-        modulation: { type: "triangle" }
+      // OPTIMIZED BELLS: Clear, bright, crisp sound
+      audio.bellGain = new Tone.Gain(0.6).connect(audio.delay);
+      audio.bells = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "triangle" },
+        envelope: { 
+          attack: 0.005,
+          decay: 0.6,
+          sustain: 0.2,
+          release: 0.4
+        }
       }).connect(audio.bellGain);
 
-      audio.highBellGain = new Tone.Gain(0.3).connect(audio.delay);
-      audio.highBells = new Tone.FMSynth({
-        harmonicity: 4.5,
-        modulationIndex: 15,
+      // High Bells: Ethereal chimes
+      audio.highBellGain = new Tone.Gain(0.4).connect(audio.delay);
+      audio.highBells = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: "sine" },
-        envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1.5 },
-        modulation: { type: "square" },
-        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+        envelope: { 
+          attack: 0.002,
+          decay: 0.3,
+          sustain: 0,
+          release: 0.2
+        }
       }).connect(audio.highBellGain);
     }
 
@@ -675,8 +680,8 @@
         
         if (audio.droneGain) audio.droneGain.gain.rampTo(droneVol * 0.5, 0.1);
         if (audio.pulseGain) audio.pulseGain.gain.rampTo(pulsesVol, 0.1);
-        if (audio.bellGain) audio.bellGain.gain.rampTo(bellVol * 0.8, 0.1);
-        if (audio.highBellGain) audio.highBellGain.gain.rampTo(bellVol * 0.6, 0.1);
+        if (audio.bellGain) audio.bellGain.gain.rampTo(bellVol * 0.9, 0.1);
+        if (audio.highBellGain) audio.highBellGain.gain.rampTo(bellVol * 0.8, 0.1);
       }
 
       let activeHands = [];
@@ -724,7 +729,7 @@
 
       let currentHandStates = [];
       let frameRainEnergy = 0;
-      let maxFreq = 400;
+      let maxFreq = 6000;
 
       activeHands.forEach((hand, i) => {
         let prev = prevHandStates[i];
@@ -743,34 +748,34 @@
         currentHandStates[i] = { x: hand.x, y: hand.y, openness: hand.openness };
 
         if (audioCtxStarted) {
-          maxFreq = Math.max(maxFreq, 400 + hand.y * 7000);
+          maxFreq = Math.max(6000, 6000 + hand.y * 3000);
           const isWiggling = wiggling > 1.5;
           let bellChance = 0;
           
           if (hand.isReal) {
-            if (hand.isPinching) bellChance = 0.3;
-            else if (isWiggling) bellChance = 0.2;
-            else bellChance = 0.02;
+            if (hand.isPinching) bellChance = 0.4;
+            else if (isWiggling) bellChance = 0.25;
+            else bellChance = 0.08;
           } else {
-            bellChance = 0.05;
+            bellChance = 0.1;
           }
 
           if (Math.random() < bellChance) {
-            const scale = ["G6", "Bb6", "C7", "D7", "E7", "G7", "B7"];
+            const scale = ["C6", "D6", "E6", "G6", "A6", "B6", "C7"];
             const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * scale.length);
             const note = scale[noteIdx];
-            const velocity = hand.isPinching ? 0.9 : Math.min(1, frameRainEnergy * 0.25);
-            if (audio.bells && note) audio.bells.triggerAttackRelease(note, "8n", Tone.now(), velocity);
+            const velocity = hand.isPinching ? 1.0 : Math.min(1, 0.5 + frameRainEnergy * 0.15);
+            if (audio.bells && note) audio.bells.triggerAttackRelease(note, "4n", Tone.now(), velocity);
             grid.forEach(p => {
               if (Math.hypot(p.x - hand.x, p.y - hand.y) < 0.08) p.brightness = 255;
             });
           }
 
-          if (isWiggling && Math.random() > 0.9 && t > lastHighBellTime + 0.1) {
-            const highScale = ["C7", "E7", "G7", "B7", "D8", "G8"];
+          if (isWiggling && Math.random() > 0.85 && t > lastHighBellTime + 0.15) {
+            const highScale = ["D7", "F7", "G7", "A7", "B7", "C8"];
             const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * highScale.length);
             const highNote = highScale[noteIdx];
-            if (audio.highBells) audio.highBells.triggerAttackRelease(highNote, "16n", Tone.now(), Math.min(1, frameRainEnergy * 0.4));
+            if (audio.highBells) audio.highBells.triggerAttackRelease(highNote, "8n", Tone.now(), Math.min(1, 0.6 + frameRainEnergy * 0.2));
             lastHighBellTime = t;
           }
         }
@@ -784,7 +789,7 @@
       prevHandStates = currentHandStates;
 
       if (audioCtxStarted) {
-        if (audio.filter) audio.filter.frequency.rampTo(maxFreq, 0.2);
+        if (audio.filter) audio.filter.frequency.rampTo(maxFreq, 0.3);
         smoothedRainEnergy = smoothedRainEnergy * 0.8 + frameRainEnergy * 0.2;
         const rainVolControl = controls.get('rain_vol') / 100;
         const targetRainVol = Math.min(1, smoothedRainEnergy * 0.8) * rainVolControl;
