@@ -1,251 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>wind songs</title>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    @font-face {
-      font-family: "EarlySans";
-      src: local("EarlySans"), url("https://brik.space/fonts/EarlySans-Regular.woff2") format("woff2");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "EarlySans";
-      src: local("EarlySans Medium"), url("https://brik.space/fonts/EarlySans-Medium.woff2") format("woff2");
-      font-weight: 500;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Neue Haas Grotesk Display Pro";
-      src: local("Neue Haas Grotesk Display Pro"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Regular.ttf") format("truetype");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Neue Haas Grotesk Display Pro";
-      src: local("Neue Haas Grotesk Display Pro Medium"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Medium.ttf") format("truetype");
-      font-weight: 500;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Neue Haas Grotesk Display Pro";
-      src: local("Neue Haas Grotesk Display Pro Bold"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Bold.ttf") format("truetype");
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
-
-  
-
-    :root {
-      --clay-font: "EarlySans", "Early Sans Variable", system-ui, -apple-system, sans-serif;
-      --clay-font-display: "EarlySans", "Early Sans Variable", system-ui, -apple-system, sans-serif;
-      --clay-font-size-xs: 11px;
-      --clay-font-size-sm: 12px;
-      --clay-font-size-base: 14px;
-      --clay-font-size-md: 16px;
-      --clay-font-size-lg: 20px;
-      --clay-font-size-xl: 24px;
-      --clay-font-size-2xl: 32px;
-      --clay-font-size-3xl: 48px;
-      --clay-font-size-4xl: 64px;
-      --clay-font-size-5xl: 96px;
-      --clay-font-weight-regular: 400;
-      --clay-font-weight-medium: 500;
-      --clay-font-weight-bold: 700;
-      --clay-line-height-tight: 1.1;
-      --clay-line-height-normal: 1.4;
-      --clay-line-height-relaxed: 1.6;
-      --clay-letter-spacing-tight: -0.24px;
-      --clay-letter-spacing-normal: 0;
-      --clay-letter-spacing-wide: 0.04em;
-      --clay-black: #000000;
-      --clay-white: #ffffff;
-      --clay-gray-50: #fafafa;
-      --clay-gray-100: #f5f5f5;
-      --clay-gray-200: #e5e5e5;
-      --clay-gray-300: #d4d4d4;
-      --clay-gray-400: #a3a3a3;
-      --clay-gray-500: #737373;
-      --clay-gray-600: #525252;
-      --clay-gray-700: #404040;
-      --clay-gray-800: #262626;
-      --clay-gray-900: #171717;
-      --clay-text-primary: #0a0a0a;
-      --clay-text-secondary: #525252;
-      --clay-text-muted: #a3a3a3;
-      --clay-surface: #ffffff;
-      --clay-surface-secondary: #fafafa;
-      --clay-surface-elevated: #ffffff;
-      --clay-border: #e5e5e5;
-      --clay-border-subtle: #f5f5f5;
-      --clay-space-1: 4px;
-      --clay-space-2: 8px;
-      --clay-space-3: 12px;
-      --clay-space-4: 16px;
-      --clay-space-5: 20px;
-      --clay-space-6: 24px;
-      --clay-space-8: 32px;
-      --clay-space-10: 40px;
-      --clay-space-12: 48px;
-      --clay-space-16: 64px;
-      --clay-radius-sm: 5px;
-      --clay-radius-md: 5px;
-      --clay-radius-lg: 10px;
-      --clay-radius-xl: 10px;
-      --clay-radius-full: 9999px;
-      --ct-card-border: #e1e1e1;
-      --ct-control-surface: #e8e8e8;
-      --ct-control-radius: 5px;
-      --ct-card-radius: 10px;
-      --clay-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --clay-shadow-md: 0 2px 8px rgba(0,0,0,0.08);
-      --clay-shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
-      --clay-ease: cubic-bezier(0.4, 0, 0.2, 1);
-      --clay-duration-fast: 150ms;
-      --clay-duration-normal: 250ms;
-      --clay-duration-slow: 400ms;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100%;
       height: 100%;
-      background: transparent;
       overflow: hidden;
-      font-family: var(--clay-font);
+      background: #000;
+      font-family: Helvetica, Arial, sans-serif;
+      text-transform: lowercase;
+      font-weight: 700;
+      color: #fff;
     }
-    .tool-canvas-area {
+
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
+      display: block;
+      background: #000;
+    }
+
+    video {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scaleX(-1);
+    }
+
+    #start-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
+      text-align: center;
+      cursor: pointer;
+      padding: 2rem;
+      background: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(15px);
+      transition: opacity 0.8s ease;
     }
-    canvas { display: block; background: transparent; }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
 
-:root {
-  --clay-font: "Helvetica", "Arial", sans-serif;
-}
+    #start-btn-text {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
 
-body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000;
-  font-family: var(--clay-font);
-  text-transform: lowercase;
-  font-weight: bold;
-  color: white;
-}
+    #start-sub-text {
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.8;
+    }
 
-.tool-canvas-area {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    #start-instructions {
+      max-width: 520px;
+      font-size: 0.75rem;
+      line-height: 1.7;
+      opacity: 0.65;
+    }
 
-#start-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(15px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  z-index: 100;
-  cursor: pointer;
-  transition: opacity 0.8s ease;
-  text-align: center;
-}
+    #persistent-info {
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      z-index: 50;
+      width: 85%;
+      max-width: 650px;
+      text-align: center;
+      font-size: 0.7rem;
+      line-height: 1.6;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
 
-#start-btn-text {
-  font-size: clamp(1.8rem, 6vw, 3rem);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-}
-
-#start-sub-text {
-  font-size: 0.9rem;
-  margin-bottom: 2.5rem;
-  opacity: 0.8;
-}
-
-#start-instructions {
-  max-width: 480px;
-  font-size: 0.75rem;
-  line-height: 1.7;
-  opacity: 0.6;
-  padding: 0 2.5rem;
-}
-
-#persistent-info {
-  position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  max-width: 650px;
-  text-align: center;
-  color: white;
-  font-size: 0.7rem;
-  line-height: 1.6;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 50;
-  transition: opacity 1s ease;
-}
-
-#status-indicator {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  color: rgba(255,255,255,0.4);
-  font-size: 9px;
-  z-index: 60;
-}
-
-canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
-}
-
+    #status-indicator {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      z-index: 60;
+      color: rgba(255,255,255,0.45);
+      font-size: 9px;
+      letter-spacing: 0.03em;
+    }
   </style>
 </head>
+
 <body>
-  <div class="tool-canvas-area">
+  <div id="app">
     <canvas id="canvas"></canvas>
+    <video id="camera" autoplay muted playsinline></video>
+
+    <div id="start-overlay">
+      <div id="start-btn-text">loading model...</div>
+      <div id="start-sub-text">activate camera & audio</div>
+      <div id="start-instructions">
+        move your hands in front of the camera to generate atmospheric soundscapes.
+        hand height changes the frequency, fast movements intensify the electronic rain,
+        and pinch gestures activate bell-like tones.
+      </div>
+    </div>
+
+    <div id="persistent-info">
+      move your hands in front of the camera to generate atmospheric soundscapes.
+      hand height changes the frequency, fast movements intensify the electronic rain,
+      and pinch gestures activate bell-like tones.
+    </div>
+
+    <div id="status-indicator">initializing...</div>
   </div>
 
   <script>
-    // ...El resto del JS de tu archivo...
+    const CONFIG = {
+      imageInput: "https://base44.app/api/apps/69cbcd44d3da2a5cef013f5e/files/mp/public/69cbcd44d3da2a5cef013f5e/a1e019fcc_imageInput_mpnfptak.jpg",
+      droneVol: 0.05,
+      rainVol: 0.28,
+      bellVol: 0.55,
+      echoLevel: 0.9,
+      reverbLevel: 0.9,
+      bgBlur: 2,
+      sensitivity: 1.15,
+      gridColor: "#ffffff",
+      autoMode: false
+    };
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const video = document.getElementById("camera");
+    const overlay = document.getElementById("start-overlay");
+    const startText = document.getElementById("start-btn-text");
+    const persistentInfo = document.getElementById("persistent-info");
+    const statusIndicator = document.getElementById("status-indicator");
+
+    let isStarted = false;
+    let audioReady = false;
+    let handLandmarker = null;
+    let latestResults = null;
+    let lastVideoTime = -1;
+
+    const bgImage = new Image();
+    bgImage.src = CONFIG.imageInput;
+
+    const GRID_SIZE = 35;
+    const grid = [];
+    const prevHandStates = [];
+    let smoothedRainEnergy = 0;
+
+    const audio = {
+      master: null,
+      reverb: null,
+      delay: null,
+      filter: null,
+      drone: null,
+      droneGain: null,
+      rain: null,
+      rainGain: null,
+      rainFilter: null,
+      bells: null,
+      bellGain: null,
+      highBells: null,
+      highBellGain: null,
+      pulseSynth: null,
+      pulseGain: null,
+      pulseLoop: null
+    };
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 768 ? 1.5 : 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function initGrid() {
+      grid.length = 0;
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+          grid.push({ x: x / (GRID_SIZE - 1), y: y / (GRID_SIZE - 1), brightness: 0 });
+        }
+      }
+    }
+
+    function drawImageCover(context, img, x, y, w, h) {
+      if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) {
+        context.fillStyle = "#000";
+        context.fillRect(x, y, w, h);
+        return;
+      }
+
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const canvasRatio = w / h;
+      let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+
+      if (imgRatio > canvasRatio) {
+        sw = img.naturalHeight * canvasRatio;
+        sx = (img.naturalWidth - sw) / 2;
+      } else {
+        sh = img.naturalWidth / canvasRatio;
+        sy = (img.naturalHeight - sh) / 2;
+      }
+
+      context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    }
+
+    async function initMediaPipe() {
+      try {
+        const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+        const filesetResolver = await vision.FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+
+        handLandmarker = await vision.HandLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "CPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.4,
+          minHandPresenceConfidence: 0.4,
+          minTrackingConfidence: 0.4
+        });
+
+        startText.innerText = "start experience";
+        statusIndicator.innerText = "model ready";
+      } catch (error) {
+        console.error("MediaPipe error:", error);
+        startText.innerText = "start audio only";
+        statusIndicator.innerText = "hand tracking unavailable";
+      }
+    }
+
+    function setupAudio() {
+      if (!window.Tone || audioReady) return;
+
+      audio.master = new Tone.Gain(0.8).toDestination();
+      audio.reverb = new Tone.Reverb({ decay: 12, wet: CONFIG.reverbLevel }).connect(audio.master);
+      audio.delay = new Tone.FeedbackDelay("8n", 0.5).connect(audio.reverb);
+      audio.delay.wet.value = CONFIG.echoLevel;
+      audio.filter = new Tone.Filter(2000, "lowpass").connect(audio.delay);
+
+      audio.droneGain = new Tone.Gain(0).connect(audio.filter);
+      audio.drone = new Tone.FatOscillator("C2", "sawtooth", 40).connect(audio.droneGain);
+
+      audio.rainGain = new Tone.Gain(0).connect(audio.filter);
+      audio.rainFilter = new Tone.AutoFilter({
+        frequency: "2n",
+        baseFrequency: 800,
+        octaves: 3
+      }).connect(audio.rainGain);
+      audio.rain = new Tone.Noise("pink").connect(audio.rainFilter);
+
+      audio.bellGain = new Tone.Gain(0).connect(audio.filter);
+      audio.bells = new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 3.5,
+        modulationIndex: 20,
+        envelope: { attack: 0.01, decay: 2, sustain: 0, release: 3 }
+      }).connect(audio.bellGain);
+
+      audio.highBellGain = new Tone.Gain(0).connect(audio.delay);
+      audio.highBells = new Tone.FMSynth({
+        harmonicity: 4.5,
+        modulationIndex: 15,
+        envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1.5 }
+      }).connect(audio.highBellGain);
+
+      audio.pulseGain = new Tone.Gain(0).connect(audio.filter);
+      audio.pulseSynth = new Tone.FMSynth({
+        harmonicity: 2.5,
+        modulationIndex: 5,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1 }
+      }).connect(audio.pulseGain);
+
+      audio.pulseLoop = new Tone.Loop((time) => {
+        audio.pulseSynth.triggerAttackRelease("C2", "8n", time);
+      }, "4m");
+
+      Tone.Transport.bpm.value = 60;
+      audioReady = true;
+    }
+
+    async function startExperience() {
+      if (isStarted) return;
+
+      try {
+        if (window.Tone) {
+          await Tone.start();
+          setupAudio();
+          Tone.Transport.start();
+
+          audio.drone.start();
+          audio.rain.start();
+          audio.rainFilter.start();
+          audio.pulseLoop.start(0);
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "user",
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            },
+            audio: false
+          });
+          video.srcObject = stream;
+          await video.play();
+        } catch (cameraError) {
+          console.warn("Camera unavailable:", cameraError);
+          CONFIG.autoMode = true;
+          statusIndicator.innerText = "camera unavailable / auto mode";
+        }
+
+        isStarted = true;
+        overlay.style.opacity = "0";
+        setTimeout(() => { overlay.style.display = "none"; }, 800);
+        persistentInfo.style.opacity = "0.4";
+      } catch (error) {
+        console.error("Start error:", error);
+        isStarted = true;
+        CONFIG.autoMode = true;
+        overlay.style.display = "none";
+      }
+    }
+
+    function updateHandTracking() {
+      if (!handLandmarker || !video.srcObject || video.readyState < 2) return;
+      if (video.currentTime === lastVideoTime) return;
+
+      lastVideoTime = video.currentTime;
+      try {
+        latestResults = handLandmarker.detectForVideo(video, performance.now());
+      } catch (error) {
+        console.warn("Detection error:", error);
+      }
+    }
+
+    function getHands(t) {
+      const activeHands = [];
+
+      if (latestResults && latestResults.landmarks) {
+        latestResults.landmarks.forEach((hand) => {
+          const palm = hand[0];
+          const thumbTip = hand[4];
+          const indexTip = hand[8];
+
+          let openness = 0;
+          [8, 12, 16, 20].forEach((idx) => {
+            openness += Math.hypot(hand[idx].x - palm.x, hand[idx].y - palm.y);
+          });
+
+          openness = Math.min(1, openness * 1.5);
+
+          const pinchDistance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+          const isPinching = pinchDistance < 0.06;
+
+          activeHands.push({
+            x: 1 - palm.x,
+            y: palm.y,
+            openness,
+            isPinching,
+            isReal: true,
+            landmarks: hand
+          });
+        });
+      }
+
+      if (CONFIG.autoMode && activeHands.length < 2) {
+        for (let i = 0; i < 2 - activeHands.length; i++) {
+          const offset = i * Math.PI + t * 0.2;
+          activeHands.push({
+            x: 0.5 + Math.sin(t * 0.4 + offset) * 0.3,
+            y: 0.5 + Math.cos(t * 0.6 + offset) * 0.2,
+            openness: 0.5 + Math.sin(t * 1.5 + offset) * 0.3,
+            isPinching: Math.sin(t * 2.5 + offset) > 0.85,
+            isReal: false
+          });
+        }
+      }
+
+      return activeHands;
+    }
+
+    function drawHandSkeleton(hand, w, h) {
+      if (!hand.isReal || !hand.landmarks) return;
+
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      ctx.lineWidth = 1.5;
+
+      const paths = [
+        [0,1,2,3,4],
+        [0,5,6,7,8],
+        [5,9,13,17],
+        [0,17,18,19,20],
+        [9,10,11,12],
+        [13,14,15,16]
+      ];
+
+      paths.forEach((path) => {
+        ctx.beginPath();
+        path.forEach((idx, i) => {
+          const lm = hand.landmarks[idx];
+          const x = (1 - lm.x) * w;
+          const y = lm.y * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+
+      hand.landmarks.forEach((lm) => {
+        ctx.fillStyle = hand.isPinching ? "#ffffff" : CONFIG.gridColor;
+        ctx.beginPath();
+        ctx.arc((1 - lm.x) * w, lm.y * h, hand.isPinching ? 6 : 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function animate(timestamp) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const t = timestamp * 0.001;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.save();
+      if (CONFIG.bgBlur > 0) ctx.filter = `blur(${CONFIG.bgBlur}px)`;
+      drawImageCover(ctx, bgImage, 0, 0, w, h);
+      ctx.restore();
+
+      if (!isStarted) {
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      updateHandTracking();
+
+      if (audioReady) {
+        audio.droneGain.gain.rampTo(CONFIG.droneVol, 0.1);
+        audio.pulseGain.gain.rampTo(0.09, 0.1);
+        audio.bellGain.gain.rampTo(CONFIG.bellVol, 0.1);
+        audio.highBellGain.gain.rampTo(CONFIG.bellVol * 0.75, 0.1);
+        audio.reverb.wet.rampTo(CONFIG.reverbLevel, 0.1);
+        audio.delay.wet.rampTo(CONFIG.echoLevel, 0.1);
+      }
+
+      const activeHands = getHands(t);
+      const sensitivity = CONFIG.sensitivity;
+      let frameRainEnergy = 0;
+      let maxFreq = 400;
+
+      activeHands.forEach((hand, i) => {
+        const prev = prevHandStates[i];
+        let wiggling = 0;
+
+        if (prev) {
+          const movement = Math.hypot(hand.x - prev.x, hand.y - prev.y) * 150 * sensitivity;
+          wiggling = Math.abs(hand.openness - prev.openness) * 80 * sensitivity;
+          frameRainEnergy += movement + wiggling + (1 - hand.openness) * 3 * sensitivity;
+        }
+
+        prevHandStates[i] = { x: hand.x, y: hand.y, openness: hand.openness };
+
+        if (audioReady) {
+          maxFreq = Math.max(maxFreq, 400 + hand.y * 7000);
+
+          const bellChance = hand.isReal
+            ? (hand.isPinching ? 0.28 : (wiggling > 1.3 ? 0.16 : 0.01))
+            : 0.04;
+
+          if (Math.random() < bellChance) {
+            const scale = ["G6", "Bb6", "C7", "D7", "E7", "G7", "B7"];
+            const noteIndex = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * scale.length);
+            const velocity = hand.isPinching ? 0.9 : Math.min(1, frameRainEnergy * 0.22);
+
+            audio.bells.triggerAttackRelease(scale[noteIndex], "8n", Tone.now(), velocity);
+
+            grid.forEach((p) => {
+              if (Math.hypot(p.x - hand.x, p.y - hand.y) < 0.08) p.brightness = 255;
+            });
+          }
+        }
+
+        grid.forEach((p) => {
+          const d = Math.hypot(p.x - hand.x, p.y - hand.y);
+          if (d < 0.18) p.brightness = Math.max(p.brightness, (1 - d / 0.18) * 255);
+        });
+      });
+
+      if (audioReady) {
+        audio.filter.frequency.rampTo(maxFreq, 0.2);
+        smoothedRainEnergy = smoothedRainEnergy * 0.8 + frameRainEnergy * 0.2;
+        audio.rainGain.gain.rampTo(Math.min(1, smoothedRainEnergy * 0.8) * CONFIG.rainVol, 0.1);
+        audio.rainFilter.frequency.rampTo(Math.min(10000, 300 + smoothedRainEnergy * 4000), 0.1);
+      }
+
+      grid.forEach((p) => {
+        if (p.brightness > 1) {
+          const alpha = Math.floor(p.brightness).toString(16).padStart(2, "0");
+          ctx.fillStyle = CONFIG.gridColor + alpha;
+          ctx.beginPath();
+          ctx.arc(p.x * w, p.y * h, 2, 0, Math.PI * 2);
+          ctx.fill();
+          p.brightness *= 0.94;
+        }
+      });
+
+      activeHands.forEach((hand) => drawHandSkeleton(hand, w, h));
+
+      if (handLandmarker) {
+        statusIndicator.innerText = activeHands.some((h) => h.isReal)
+          ? "tracking active"
+          : "searching for hands...";
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    overlay.addEventListener("click", startExperience);
+    initGrid();
+    initMediaPipe();
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
