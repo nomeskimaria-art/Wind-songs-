@@ -1,6 +1,251 @@
-       window.ChatoolyControls = api;
-       return api;
-     })();
-     controls.set('imageInput', 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1200&q=80');
-    // ====== AETHER RAIN ======
-    let isStarted = false;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wind songs</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <style>
+
+    @font-face {
+      font-family: "EarlySans";
+      src: local("EarlySans"), url("https://brik.space/fonts/EarlySans-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "EarlySans";
+      src: local("EarlySans Medium"), url("https://brik.space/fonts/EarlySans-Medium.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Neue Haas Grotesk Display Pro";
+      src: local("Neue Haas Grotesk Display Pro"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Neue Haas Grotesk Display Pro";
+      src: local("Neue Haas Grotesk Display Pro Medium"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Medium.ttf") format("truetype");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Neue Haas Grotesk Display Pro";
+      src: local("Neue Haas Grotesk Display Pro Bold"), url("https://brik.space/fonts/NeueHaasGroteskDisplayPro-Bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+  
+
+    :root {
+      --clay-font: "EarlySans", "Early Sans Variable", system-ui, -apple-system, sans-serif;
+      --clay-font-display: "EarlySans", "Early Sans Variable", system-ui, -apple-system, sans-serif;
+      --clay-font-size-xs: 11px;
+      --clay-font-size-sm: 12px;
+      --clay-font-size-base: 14px;
+      --clay-font-size-md: 16px;
+      --clay-font-size-lg: 20px;
+      --clay-font-size-xl: 24px;
+      --clay-font-size-2xl: 32px;
+      --clay-font-size-3xl: 48px;
+      --clay-font-size-4xl: 64px;
+      --clay-font-size-5xl: 96px;
+      --clay-font-weight-regular: 400;
+      --clay-font-weight-medium: 500;
+      --clay-font-weight-bold: 700;
+      --clay-line-height-tight: 1.1;
+      --clay-line-height-normal: 1.4;
+      --clay-line-height-relaxed: 1.6;
+      --clay-letter-spacing-tight: -0.24px;
+      --clay-letter-spacing-normal: 0;
+      --clay-letter-spacing-wide: 0.04em;
+      --clay-black: #000000;
+      --clay-white: #ffffff;
+      --clay-gray-50: #fafafa;
+      --clay-gray-100: #f5f5f5;
+      --clay-gray-200: #e5e5e5;
+      --clay-gray-300: #d4d4d4;
+      --clay-gray-400: #a3a3a3;
+      --clay-gray-500: #737373;
+      --clay-gray-600: #525252;
+      --clay-gray-700: #404040;
+      --clay-gray-800: #262626;
+      --clay-gray-900: #171717;
+      --clay-text-primary: #0a0a0a;
+      --clay-text-secondary: #525252;
+      --clay-text-muted: #a3a3a3;
+      --clay-surface: #ffffff;
+      --clay-surface-secondary: #fafafa;
+      --clay-surface-elevated: #ffffff;
+      --clay-border: #e5e5e5;
+      --clay-border-subtle: #f5f5f5;
+      --clay-space-1: 4px;
+      --clay-space-2: 8px;
+      --clay-space-3: 12px;
+      --clay-space-4: 16px;
+      --clay-space-5: 20px;
+      --clay-space-6: 24px;
+      --clay-space-8: 32px;
+      --clay-space-10: 40px;
+      --clay-space-12: 48px;
+      --clay-space-16: 64px;
+      --clay-radius-sm: 5px;
+      --clay-radius-md: 5px;
+      --clay-radius-lg: 10px;
+      --clay-radius-xl: 10px;
+      --clay-radius-full: 9999px;
+      --ct-card-border: #e1e1e1;
+      --ct-control-surface: #e8e8e8;
+      --ct-control-radius: 5px;
+      --ct-card-radius: 10px;
+      --clay-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --clay-shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+      --clay-shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+      --clay-ease: cubic-bezier(0.4, 0, 0.2, 1);
+      --clay-duration-fast: 150ms;
+      --clay-duration-normal: 250ms;
+      --clay-duration-slow: 400ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: var(--clay-font);
+    }
+    .tool-canvas-area {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas { display: block; background: transparent; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
+
+:root {
+  --clay-font: "Helvetica", "Arial", sans-serif;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: var(--clay-font);
+  text-transform: lowercase;
+  font-weight: bold;
+  color: white;
+}
+
+.tool-canvas-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#start-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(15px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 100;
+  cursor: pointer;
+  transition: opacity 0.8s ease;
+  text-align: center;
+}
+
+#start-btn-text {
+  font-size: clamp(1.8rem, 6vw, 3rem);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+#start-sub-text {
+  font-size: 0.9rem;
+  margin-bottom: 2.5rem;
+  opacity: 0.8;
+}
+
+#start-instructions {
+  max-width: 480px;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  opacity: 0.6;
+  padding: 0 2.5rem;
+}
+
+#persistent-info {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 650px;
+  text-align: center;
+  color: white;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 1s ease;
+}
+
+#status-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  color: rgba(255,255,255,0.4);
+  font-size: 9px;
+  z-index: 60;
+}
+
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+  </style>
+</head>
+<body>
+  <div class="tool-canvas-area">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+    // ...El resto del JS de tu archivo...
+  </script>
+</body>
+</html>
