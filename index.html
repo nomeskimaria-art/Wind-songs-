@@ -6,28 +6,39 @@
   <title>wind songs</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
-
-
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+    
     html, body {
       width: 100%;
       height: 100%;
-      background: transparent;
+      background: #000;
       overflow: hidden;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+    
     .tool-canvas-area {
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      position: fixed;
+      top: 0;
+      left: 0;
       overflow: hidden;
+      background: #000;
     }
-    canvas { display: block; background: transparent; }
-
+    
+    canvas { 
+      display: block; 
+      background: transparent;
+      max-width: 100%;
+      max-height: 100%;
+    }
   </style>
 </head>
 <body>
@@ -36,14 +47,15 @@
   </div>
 
   <script>
-
-    // Mobile perf: cap devicePixelRatio so canvases allocate fewer pixels.
+    // Mobile perf: cap devicePixelRatio
     (function() {
       var _isMobile = window.innerWidth <= 768;
       if (_isMobile) {
         var _nativeDPR = window.devicePixelRatio || 1;
         var _cappedDPR = Math.min(1.5, _nativeDPR);
-        Object.defineProperty(window, 'devicePixelRatio', { get: function() { return _cappedDPR; } });
+        Object.defineProperty(window, 'devicePixelRatio', { 
+          get: function() { return _cappedDPR; } 
+        });
       }
     })();
 
@@ -57,7 +69,6 @@
       var _cameraSessions = {};
       var _cameraFrameListeners = [];
       var _cameraStopNotified = {};
-
 
       var _canvas = document.getElementById('canvas');
       var _area = _canvas ? _canvas.parentElement : document.querySelector('.tool-canvas-area');
@@ -125,9 +136,6 @@
           } catch (err) {
             setTimeout(function() { throw err; }, 0);
           }
-        }
-        if (typeof CustomEvent !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('clay:camera-frame', { detail: detail }));
         }
       }
 
@@ -206,7 +214,7 @@
           !navigator.mediaDevices ||
           typeof navigator.mediaDevices.getUserMedia !== 'function'
         ) {
-          return Promise.reject(new Error('Camera is not available in this browser.'));
+          return Promise.reject(new Error('Camera is not available'));
         }
         var requestId = _makeCameraRequestId();
         delete _cameraStopNotified[requestId];
@@ -265,8 +273,6 @@
         };
       }
 
-
-
       function _applyBgCSS() {
         _detectCanvas();
         if (!_canvas) return;
@@ -282,9 +288,6 @@
             _canvas.style.backgroundSize = fitCss;
             _canvas.style.backgroundPosition = 'center';
             _canvas.style.backgroundRepeat = 'no-repeat';
-          } else {
-            _canvas.style.backgroundImage = '';
-            _canvas.style.backgroundColor = _bgState.color;
           }
         }
       }
@@ -330,13 +333,8 @@
           _canvas.width = _exportWidth;
           _canvas.height = _exportHeight;
         }
-        if (window.p5 && typeof window.resizeCanvas === 'function') window.resizeCanvas(_exportWidth, _exportHeight);
-        if (window.renderer && window.renderer.setSize) window.renderer.setSize(_exportWidth, _exportHeight, false);
-        if (window.hydra && window.hydra.setResolution) window.hydra.setResolution(_exportWidth, _exportHeight);
         window.dispatchEvent(new Event('resize'));
       }
-
-      function fitToArea() {}
 
       function getExportDimensions() {
         if (_exportMode === 'fixed') return { width: _exportWidth, height: _exportHeight, mode: 'fixed' };
@@ -345,30 +343,6 @@
       }
 
       function isFixedExportMode() { return _exportMode === 'fixed'; }
-
-      function _onAreaResize() {
-        var r = window.renderer || window.threeRenderer;
-        if (!r || !r.setSize) return;
-        if (_resizeRAF) cancelAnimationFrame(_resizeRAF);
-        _resizeRAF = requestAnimationFrame(function() {
-          _detectCanvas();
-          if (!_area) return;
-          var w = _area.clientWidth;
-          var h = _area.clientHeight;
-          if (w <= 0 || h <= 0) return;
-          r.setSize(w, h);
-          window.dispatchEvent(new Event('resize'));
-        });
-      }
-      if (typeof ResizeObserver !== 'undefined' && _area) {
-        new ResizeObserver(_onAreaResize).observe(_area);
-      }
-      window.addEventListener('resize', _onAreaResize);
-
-      setTimeout(function() {
-        _detectCanvas();
-        if (_bgState.mode !== 'none') _applyBgCSS();
-      }, 500);
 
       function getMousePos(event) {
         _detectCanvas();
@@ -413,67 +387,50 @@
         setBackground: setBackground,
         getBackground: getBackground,
         setExportDimensions: setExportDimensions,
-        fitToArea: fitToArea,
         getExportDimensions: getExportDimensions,
         isFixedExportMode: isFixedExportMode,
         requestCamera: requestCamera,
         stopCamera: stopCamera,
         onCameraFrame: onCameraFrame,
-
         getMousePos: getMousePos,
         drawImage: drawImage
       };
     })();
 
-    window.ChatoolyCanvas = window.CanvasRuntimeAPI;
-    window.ChatoolyControls = window.ControlsAPI;
-
-    (function() {
-      var srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
-      if (srcDesc && srcDesc.set) {
-        Object.defineProperty(HTMLImageElement.prototype, 'src', {
-          get: srcDesc.get,
-          set: function(val) {
-            if (val && typeof val === 'string' && !val.startsWith('data:') && !this.crossOrigin) {
-              this.crossOrigin = 'anonymous';
-            }
-            srcDesc.set.call(this, val);
-          },
-          configurable: true,
-          enumerable: true
-        });
-      }
-    })();
-
-    window.loadImage = function(src, callback) {
-      var img = new Image();
-      if (src && typeof src === 'string' && !src.startsWith('data:')) {
-        img.crossOrigin = 'anonymous';
-      }
-      img.onload = function() { if (callback) callback(img); };
-      img.onerror = function() { console.error('Failed to load image:', src); };
-      img.src = src;
-      return img;
-    };
-  
-  </script>
-  <script>
+    // Setup canvas properly
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
     var __ctArea = canvas.parentElement;
     var __maxDim = (window.innerWidth <= 768) ? 960 : 4096;
 
     function resizeCanvas() {
-      var cs = getComputedStyle(__ctArea);
-      canvas.width = Math.min(__maxDim, __ctArea.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
-      canvas.height = Math.min(__maxDim, __ctArea.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
+    
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // Enhanced Controls System
     var controls = (function() {
-      var _v = {"auto_mode":false,"pulses_active":false,"drone_vol":0,"pulses_vol":-11,"rain_vol":28,"bell_vol":6,"echo_level":90,"reverb_level":90,"bg_blur":2,"sensitivity":1,"grid_color":"#ffffff","imageInput":"https://base44.app/api/apps/69cbcd44d3da2a5cef013f5e/files/mp/public/69cbcd44d3da2a5cef013f5e/a1e019fcc_imageInput_mpnfptak.jpg"};
+      var _v = {
+        "auto_mode": false,
+        "pulses_active": false,
+        "drone_vol": 40,
+        "pulses_vol": 0,
+        "rain_vol": 50,
+        "bell_vol": 50,
+        "echo_level": 70,
+        "reverb_level": 60,
+        "bg_blur": 0,
+        "sensitivity": 1,
+        "grid_color": "#ffffff",
+        "imageInput": ""
+      };
+      
       var _defaults = JSON.parse(JSON.stringify(_v));
+      var _listeners = {};
+
       function _hexToRgb(hex) {
         var h = String(hex || '').replace('#', '');
         if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
@@ -484,7 +441,9 @@
           b: parseInt(h.slice(4, 6), 16)
         };
       }
+
       function _clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+
       function _hexToRgbaCss(hex, opacity0to100) {
         var rgb = _hexToRgb(hex);
         if (!rgb) return 'rgba(0,0,0,1)';
@@ -492,466 +451,441 @@
         var a = _clamp(op, 0, 100) / 100;
         return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + a + ')';
       }
+
       var api = {
         get: function(k) { return _v[k]; },
         getAll: function() { return Object.assign({}, _v); },
         getDefaults: function() { return JSON.parse(JSON.stringify(_defaults)); },
         getColorWithAlpha: function(baseKey) { return _hexToRgbaCss(_v[baseKey], _v[baseKey + '_opacity']); },
-        set: function(k, v) { _v[k] = v; },
-        onChange: function() {},
+        set: function(k, v) { 
+          _v[k] = v;
+          if (_listeners[k]) {
+            _listeners[k].forEach(function(fn) { try { fn(v); } catch(e) {} });
+          }
+        },
+        onChange: function(k, fn) {
+          if (!_listeners[k]) _listeners[k] = [];
+          _listeners[k].push(fn);
+        },
         onAny: function() {},
         onAction: function() {}
       };
+      
       window.ControlsAPI = api;
       window.ChatoolyControls = api;
       return api;
     })();
 
-    
+    // ====== AETHER RAIN ======
+    let isStarted = false;
+    let handLandmarker = null;
+    let latestResults = null;
+    let bgImage = new Image();
+    bgImage.crossOrigin = "anonymous";
+    bgImage.src = controls.get('imageInput');
 
-    // Creative Code
-    {
-      // @clay-no-bg-control
-/**
- * AETHER RAIN — Gesture-Controlled Atmospheric Instrument
- * Optimized for robust tracking and immersive sound.
- */
+    let audioCtxStarted = false;
+    const audio = {
+      master: null,
+      reverb: null,
+      delay: null,
+      filter: null,
+      drone: null,
+      droneGain: null,
+      pulseSynth: null,
+      pulseGain: null,
+      pulseLoop: null,
+      rain: null,
+      rainGain: null,
+      rainFilter: null,
+      bells: null,
+      bellGain: null,
+      highBells: null,
+      highBellGain: null
+    };
 
-let isStarted = false;
-let handLandmarker = null;
-let latestResults = null;
-let bgImage = new Image();
-bgImage.crossOrigin = "anonymous";
-bgImage.src = controls.get('imageInput');
+    let lastHighBellTime = 0;
+    const GRID_SIZE = 45;
+    let grid = [];
+    let prevHandStates = [];
+    let smoothedRainEnergy = 0;
 
-// Audio Engine State
-let audioCtxStarted = false;
-const audio = {
-  master: null,
-  reverb: null,
-  delay: null,
-  filter: null,
-  drone: null,
-  droneGain: null,
-  pulseSynth: null,
-  pulseGain: null,
-  pulseLoop: null,
-  rain: null,
-  rainGain: null,
-  rainFilter: null,
-  bells: null,
-  bellGain: null,
-  highBells: null,
-  highBellGain: null
-};
-
-let lastHighBellTime = 0;
-
-// Grid State
-const GRID_SIZE = 45;
-let grid = [];
-let prevHandStates = [];
-let smoothedRainEnergy = 0;
-
-async function initMediaPipe() {
-  try {
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
-    const filesetResolver = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-    );
-    handLandmarker = await vision.HandLandmarker.createFromOptions(filesetResolver, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-        delegate: "CPU"
-      },
-      runningMode: "VIDEO",
-      numHands: 2,
-      minHandDetectionConfidence: 0.4,
-      minHandPresenceConfidence: 0.4
-    });
-    console.log("mediapipe ready");
-    const btn = document.querySelector('#start-btn-text');
-    if (btn) btn.innerText = "start experience";
-  } catch (e) {
-    console.error("mediapipe init error:", e);
-    const btn = document.querySelector('#start-btn-text');
-    if (btn) btn.innerText = "start (audio only)";
-  }
-}
-
-function setupAudio() {
-  if (!window.Tone) return;
-  
-  // Master Chain
-  audio.master = new Tone.Gain(0.8).toDestination();
-  audio.reverb = new Tone.Reverb({ decay: 12, wet: controls.get('reverb_level') / 100 }).connect(audio.master);
-  audio.delay = new Tone.FeedbackDelay("8n", 0.5).connect(audio.reverb);
-  audio.delay.wet.value = controls.get('echo_level') / 100;
-  audio.filter = new Tone.Filter(2000, "lowpass").connect(audio.delay);
-
-  // Drone 1: Deep base
-  audio.droneGain = new Tone.Gain(0).connect(audio.filter);
-  audio.drone = new Tone.FatOscillator("C2", "sawtooth", 40).connect(audio.droneGain);
-
-  // Atmospheric Pulsos (Kick-Bell)
-  Tone.Transport.bpm.value = 60; 
-  audio.pulseGain = new Tone.Gain(0).connect(audio.filter);
-  audio.pulseSynth = new Tone.FMSynth({
-    harmonicity: 2.5,
-    modulationIndex: 5,
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1 },
-    modulation: { type: "square" },
-    modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
-  }).connect(audio.pulseGain);
-  
-  audio.pulseLoop = new Tone.Loop((time) => {
-    audio.pulseSynth.triggerAttackRelease("C2", "8n", time);
-  }, "4m"); 
-
-  // Rain: Textural noise
-  audio.rainGain = new Tone.Gain(0).connect(audio.filter);
-  audio.rainFilter = new Tone.AutoFilter({ 
-    frequency: "2n", 
-    baseFrequency: 800, 
-    octaves: 3,
-    type: "sine"
-  }).connect(audio.rainGain);
-  audio.rain = new Tone.Noise("pink").connect(audio.rainFilter);
-
-  // Bells: FM Synthesis
-  audio.bellGain = new Tone.Gain(0).connect(audio.filter);
-  audio.bells = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 3.5,
-    modulationIndex: 20,
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.01, decay: 2, sustain: 0, release: 3 },
-    modulation: { type: "triangle" }
-  }).connect(audio.bellGain);
-
-  // High Bells: Ethereal occasional chimes
-  audio.highBellGain = new Tone.Gain(0).connect(audio.delay);
-  audio.highBells = new Tone.FMSynth({
-    harmonicity: 4.5,
-    modulationIndex: 15,
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1.5 },
-    modulation: { type: "square" },
-    modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
-  }).connect(audio.highBellGain);
-}
-
-async function startExperience() {
-  if (isStarted) return;
-  
-  try {
-    // 1. Immediate Audio Start
-    if (window.Tone) {
-      await Tone.start();
-      setupAudio();
-      audioCtxStarted = true;
-      Tone.Transport.start();
-      if (audio.drone) audio.drone.start();
-      if (audio.pulseLoop && controls.get('pulses_active')) audio.pulseLoop.start(0);
-      if (audio.rain) audio.rain.start();
-      if (audio.rainFilter) audio.rainFilter.start();
+    async function initMediaPipe() {
+      try {
+        const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+        const filesetResolver = await vision.FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+        handLandmarker = await vision.HandLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "CPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.4,
+          minHandPresenceConfidence: 0.4
+        });
+        console.log("mediapipe ready");
+        const btn = document.querySelector('#start-btn-text');
+        if (btn) btn.innerText = "start experience";
+      } catch (e) {
+        console.error("mediapipe init error:", e);
+        const btn = document.querySelector('#start-btn-text');
+        if (btn) btn.innerText = "start (audio only)";
+      }
     }
 
-    // 2. Camera Start
-    try {
-      await CanvasRuntimeAPI.requestCamera({ video: true });
-      CanvasRuntimeAPI.onCameraFrame((frame) => {
-        if (handLandmarker && frame.canvas) {
-          try {
-            const results = handLandmarker.detectForVideo(frame.canvas, performance.now());
-            if (results) latestResults = results;
-          } catch (e) { }
+    function setupAudio() {
+      if (!window.Tone) return;
+      
+      audio.master = new Tone.Gain(0.7).toDestination();
+      audio.reverb = new Tone.Reverb({ decay: 12, wet: 0.6 }).connect(audio.master);
+      audio.delay = new Tone.FeedbackDelay("8n", 0.5).connect(audio.reverb);
+      audio.delay.wet.value = 0.7;
+      audio.filter = new Tone.Filter(2000, "lowpass").connect(audio.delay);
+
+      audio.droneGain = new Tone.Gain(0.2).connect(audio.filter);
+      audio.drone = new Tone.FatOscillator("C2", "sawtooth", 40).connect(audio.droneGain);
+
+      Tone.Transport.bpm.value = 60; 
+      audio.pulseGain = new Tone.Gain(0).connect(audio.filter);
+      audio.pulseSynth = new Tone.FMSynth({
+        harmonicity: 2.5,
+        modulationIndex: 5,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1 },
+        modulation: { type: "square" },
+        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+      }).connect(audio.pulseGain);
+      
+      audio.pulseLoop = new Tone.Loop((time) => {
+        audio.pulseSynth.triggerAttackRelease("C2", "8n", time);
+      }, "4m"); 
+
+      audio.rainGain = new Tone.Gain(0.3).connect(audio.filter);
+      audio.rainFilter = new Tone.AutoFilter({ 
+        frequency: "2n", 
+        baseFrequency: 800, 
+        octaves: 3,
+        type: "sine"
+      }).connect(audio.rainGain);
+      audio.rain = new Tone.Noise("pink").connect(audio.rainFilter);
+
+      audio.bellGain = new Tone.Gain(0.5).connect(audio.filter);
+      audio.bells = new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 3.5,
+        modulationIndex: 20,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 2, sustain: 0, release: 3 },
+        modulation: { type: "triangle" }
+      }).connect(audio.bellGain);
+
+      audio.highBellGain = new Tone.Gain(0.3).connect(audio.delay);
+      audio.highBells = new Tone.FMSynth({
+        harmonicity: 4.5,
+        modulationIndex: 15,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 1.5 },
+        modulation: { type: "square" },
+        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+      }).connect(audio.highBellGain);
+    }
+
+    async function startExperience() {
+      if (isStarted) return;
+      
+      try {
+        if (window.Tone) {
+          await Tone.start();
+          setupAudio();
+          audioCtxStarted = true;
+          Tone.Transport.start();
+          if (audio.drone) audio.drone.start();
+          if (audio.pulseLoop && controls.get('pulses_active')) audio.pulseLoop.start(0);
+          if (audio.rain) audio.rain.start();
+          if (audio.rainFilter) audio.rainFilter.start();
+        }
+
+        try {
+          await CanvasRuntimeAPI.requestCamera({ video: true });
+          CanvasRuntimeAPI.onCameraFrame((frame) => {
+            if (handLandmarker && frame.canvas) {
+              try {
+                const results = handLandmarker.detectForVideo(frame.canvas, performance.now());
+                if (results) latestResults = results;
+              } catch (e) { }
+            }
+          });
+        } catch (camErr) {
+          console.warn("Camera access denied:", camErr);
+        }
+
+        isStarted = true;
+        const ov = document.getElementById('start-overlay');
+        if (ov) {
+          ov.style.opacity = '0';
+          setTimeout(() => ov.style.display = 'none', 500);
+        }
+        
+      } catch (e) {
+        console.error("Start Error:", e);
+        isStarted = true;
+        const ov = document.getElementById('start-overlay');
+        if (ov) ov.style.display = 'none';
+      }
+    }
+
+    function initGrid() {
+      grid = [];
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+          grid.push({
+            x: x / (GRID_SIZE - 1),
+            y: y / (GRID_SIZE - 1),
+            brightness: 0
+          });
+        }
+      }
+    }
+    initGrid();
+
+    function draw(timestamp) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const t = timestamp * 0.001;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const blur = controls.get('bg_blur');
+      ctx.save();
+      if (blur > 0) ctx.filter = `blur(${blur}px)`;
+      CanvasRuntimeAPI.drawImage(ctx, bgImage, 0, 0, w, h, 'cover');
+      ctx.restore();
+
+      if (!isStarted) {
+        requestAnimationFrame(draw);
+        return;
+      }
+
+      if (audioCtxStarted) {
+        const droneVol = controls.get('drone_vol') / 100;
+        const pulsesVol = Tone.dbToGain(controls.get('pulses_vol'));
+        const bellVol = controls.get('bell_vol') / 100;
+        
+        if (audio.droneGain) audio.droneGain.gain.rampTo(droneVol * 0.5, 0.1);
+        if (audio.pulseGain) audio.pulseGain.gain.rampTo(pulsesVol, 0.1);
+        if (audio.bellGain) audio.bellGain.gain.rampTo(bellVol * 0.8, 0.1);
+        if (audio.highBellGain) audio.highBellGain.gain.rampTo(bellVol * 0.6, 0.1);
+      }
+
+      let activeHands = [];
+      const sensitivity = controls.get('sensitivity') || 1;
+
+      if (latestResults && latestResults.landmarks) {
+        latestResults.landmarks.forEach((hand) => {
+          const palm = hand[0];
+          const thumbTip = hand[4];
+          const indexTip = hand[8];
+          
+          let openness = 0;
+          [8, 12, 16, 20].forEach(idx => {
+            openness += Math.hypot(hand[idx].x - palm.x, hand[idx].y - palm.y);
+          });
+          openness = Math.min(1, openness * 1.5);
+
+          const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+          const isPinching = pinchDist < 0.06;
+
+          activeHands.push({
+            x: 1 - palm.x,
+            y: palm.y,
+            openness,
+            isPinching,
+            isReal: true,
+            landmarks: hand
+          });
+        });
+      }
+
+      if (controls.get('auto_mode') && activeHands.length < 2) {
+        const count = 2 - activeHands.length;
+        for (let i = 0; i < count; i++) {
+          const offset = i * Math.PI + t * 0.2;
+          activeHands.push({
+            x: 0.5 + Math.sin(t * 0.4 + offset) * 0.3,
+            y: 0.5 + Math.cos(t * 0.6 + offset) * 0.2,
+            openness: 0.5 + Math.sin(t * 1.5) * 0.3,
+            isPinching: Math.sin(t * 2.5 + offset) > 0.85,
+            isReal: false
+          });
+        }
+      }
+
+      let currentHandStates = [];
+      let frameRainEnergy = 0;
+      let maxFreq = 400;
+
+      activeHands.forEach((hand, i) => {
+        let prev = prevHandStates[i];
+        let wiggling = 0;
+        if (prev) {
+          let dx = hand.x - prev.x;
+          let dy = hand.y - prev.y;
+          let dOpen = Math.abs(hand.openness - prev.openness);
+          let movement = Math.sqrt(dx*dx + dy*dy) * 150 * sensitivity;
+          wiggling = dOpen * 80 * sensitivity;
+          let closedness = (1 - hand.openness) * 3 * sensitivity;
+          frameRainEnergy += movement + wiggling + closedness;
+        } else {
+          frameRainEnergy += (1 - hand.openness) * 3;
+        }
+        currentHandStates[i] = { x: hand.x, y: hand.y, openness: hand.openness };
+
+        if (audioCtxStarted) {
+          maxFreq = Math.max(maxFreq, 400 + hand.y * 7000);
+          const isWiggling = wiggling > 1.5;
+          let bellChance = 0;
+          
+          if (hand.isReal) {
+            if (hand.isPinching) bellChance = 0.3;
+            else if (isWiggling) bellChance = 0.2;
+            else bellChance = 0.02;
+          } else {
+            bellChance = 0.05;
+          }
+
+          if (Math.random() < bellChance) {
+            const scale = ["G6", "Bb6", "C7", "D7", "E7", "G7", "B7"];
+            const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * scale.length);
+            const note = scale[noteIdx];
+            const velocity = hand.isPinching ? 0.9 : Math.min(1, frameRainEnergy * 0.25);
+            if (audio.bells && note) audio.bells.triggerAttackRelease(note, "8n", Tone.now(), velocity);
+            grid.forEach(p => {
+              if (Math.hypot(p.x - hand.x, p.y - hand.y) < 0.08) p.brightness = 255;
+            });
+          }
+
+          if (isWiggling && Math.random() > 0.9 && t > lastHighBellTime + 0.1) {
+            const highScale = ["C7", "E7", "G7", "B7", "D8", "G8"];
+            const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * highScale.length);
+            const highNote = highScale[noteIdx];
+            if (audio.highBells) audio.highBells.triggerAttackRelease(highNote, "16n", Tone.now(), Math.min(1, frameRainEnergy * 0.4));
+            lastHighBellTime = t;
+          }
+        }
+
+        grid.forEach(p => {
+          const d = Math.hypot(p.x - hand.x, p.y - hand.y);
+          if (d < 0.18) p.brightness = Math.max(p.brightness, (1 - d / 0.18) * 255);
+        });
+      });
+
+      prevHandStates = currentHandStates;
+
+      if (audioCtxStarted) {
+        if (audio.filter) audio.filter.frequency.rampTo(maxFreq, 0.2);
+        smoothedRainEnergy = smoothedRainEnergy * 0.8 + frameRainEnergy * 0.2;
+        const rainVolControl = controls.get('rain_vol') / 100;
+        const targetRainVol = Math.min(1, smoothedRainEnergy * 0.8) * rainVolControl;
+        if (audio.rainGain) audio.rainGain.gain.rampTo(targetRainVol, 0.1);
+        const targetRainFreq = 300 + smoothedRainEnergy * 4000;
+        if (audio.rainFilter) audio.rainFilter.frequency.rampTo(Math.min(10000, targetRainFreq), 0.1);
+      }
+
+      const gridColor = controls.get('grid_color');
+      grid.forEach(p => {
+        if (p.brightness > 1) {
+          const alpha = Math.floor(p.brightness).toString(16).padStart(2, '0');
+          ctx.fillStyle = gridColor + alpha;
+          ctx.beginPath();
+          ctx.arc(p.x * w, p.y * h, 2, 0, Math.PI * 2);
+          ctx.fill();
+          p.brightness *= 0.94;
         }
       });
-    } catch (camErr) {
-      console.warn("Camera access denied:", camErr);
-    }
 
-    // 3. UI Transition
-    isStarted = true;
-    const ov = document.getElementById('start-overlay');
-    if (ov) {
-      ov.style.opacity = '0';
-      setTimeout(() => ov.style.display = 'none', 500);
-    }
-    
-  } catch (e) {
-    console.error("Start Error:", e);
-    isStarted = true;
-    const ov = document.getElementById('start-overlay');
-    if (ov) ov.style.display = 'none';
-  }
-}
-
-function initGrid() {
-  grid = [];
-  for (let x = 0; x < GRID_SIZE; x++) {
-    for (let y = 0; y < GRID_SIZE; y++) {
-      grid.push({
-        x: x / (GRID_SIZE - 1),
-        y: y / (GRID_SIZE - 1),
-        brightness: 0
+      activeHands.forEach(hand => {
+        if (hand.isReal && hand.landmarks) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+          ctx.lineWidth = 1.5;
+          const connections = [[0,1,2,3,4], [0,5,6,7,8], [5,9,13,17], [0,17,18,19,20], [9,10,11,12], [13,14,15,16]];
+          connections.forEach(path => {
+            ctx.beginPath();
+            path.forEach((idx, i) => {
+              const lm = hand.landmarks[idx];
+              const lx = (1 - lm.x) * w;
+              const ly = lm.y * h;
+              if (i === 0) ctx.moveTo(lx, ly); else ctx.lineTo(lx, ly);
+            });
+            ctx.stroke();
+          });
+          hand.landmarks.forEach((lm) => {
+            const lx = (1 - lm.x) * w;
+            const ly = lm.y * h;
+            ctx.fillStyle = hand.isPinching ? "#fff" : gridColor;
+            ctx.beginPath();
+            ctx.arc(lx, ly, hand.isPinching ? 6 : 4, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
       });
+
+      if (isStarted) {
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.font = "bold 11px Helvetica, Arial, sans-serif";
+        ctx.textAlign = "left";
+        const status = handLandmarker ? (latestResults && latestResults.landmarks.length > 0 ? "tracking active" : "searching for hands...") : "initializing model...";
+        ctx.fillText(status, 30, h - 30);
+      }
+
+      requestAnimationFrame(draw);
     }
-  }
-}
-initGrid();
 
-function draw(timestamp) {
-  const w = canvas.width;
-  const h = canvas.height;
-  const t = timestamp * 0.001;
+    const overlay = document.createElement('div');
+    overlay.id = 'start-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.7)';
+    overlay.style.backdropFilter = 'blur(15px)';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '1000';
+    overlay.style.cursor = 'pointer';
+    overlay.style.color = 'white';
+    overlay.style.fontFamily = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    overlay.style.fontWeight = 'bold';
+    overlay.style.transition = 'opacity 0.5s ease';
 
-  ctx.clearRect(0, 0, w, h);
+    overlay.innerHTML = `
+      <div id="start-btn-text" style="transition: all 0.4s ease; font-size: 2rem; margin-bottom: 20px;">
+        start experience
+      </div>
+      <p style="margin-top: 16px; opacity: 0.6; font-size: 0.9rem; letter-spacing: -0.01em;">
+        activate camera & audio
+      </p>
+    `;
 
-  // 1. Background Image
-  const blur = controls.get('bg_blur');
-  ctx.save();
-  if (blur > 0) ctx.filter = `blur(${blur}px)`;
-  CanvasRuntimeAPI.drawImage(ctx, bgImage, 0, 0, w, h, 'cover');
-  ctx.restore();
+    overlay.onclick = startExperience;
+    document.querySelector('.tool-canvas-area').appendChild(overlay);
 
-  if (!isStarted) {
+    controls.onChange('imageInput', (url) => { bgImage.src = url; });
+    controls.onChange('pulses_active', (active) => {
+      if (audioCtxStarted && audio.pulseLoop) {
+        if (active) audio.pulseLoop.start(0);
+        else audio.pulseLoop.stop();
+      }
+    });
+    controls.onChange('echo_level', (val) => { if (audioCtxStarted && audio.delay) audio.delay.wet.value = val / 100; });
+    controls.onChange('reverb_level', (val) => { if (audioCtxStarted && audio.reverb) audio.reverb.wet.value = val / 100; });
+
+    initMediaPipe();
     requestAnimationFrame(draw);
-    return;
-  }
-
-  // 2. Update Audio Volumes
-  if (audioCtxStarted) {
-    const droneVol = controls.get('drone_vol') / 100;
-    const pulsesVol = Tone.dbToGain(controls.get('pulses_vol'));
-    const bellVol = controls.get('bell_vol') / 100;
-    
-    if (audio.droneGain) audio.droneGain.gain.rampTo(droneVol * 0.5, 0.1);
-    if (audio.pulseGain) audio.pulseGain.gain.rampTo(pulsesVol, 0.1);
-    if (audio.bellGain) audio.bellGain.gain.rampTo(bellVol * 0.8, 0.1);
-    if (audio.highBellGain) audio.highBellGain.gain.rampTo(bellVol * 0.6, 0.1);
-  }
-
-  let activeHands = [];
-  const sensitivity = controls.get('sensitivity') || 1;
-
-  // 3. Real Hands
-  if (latestResults && latestResults.landmarks) {
-    latestResults.landmarks.forEach((hand) => {
-      const palm = hand[0];
-      const thumbTip = hand[4];
-      const indexTip = hand[8];
-      
-      let openness = 0;
-      [8, 12, 16, 20].forEach(idx => {
-        openness += Math.hypot(hand[idx].x - palm.x, hand[idx].y - palm.y);
-      });
-      openness = Math.min(1, openness * 1.5);
-
-      const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
-      const isPinching = pinchDist < 0.06;
-
-      activeHands.push({
-        x: 1 - palm.x,
-        y: palm.y,
-        openness,
-        isPinching,
-        isReal: true,
-        landmarks: hand
-      });
-    });
-  }
-
-  // 4. Auto Mode
-  if (controls.get('auto_mode') && activeHands.length < 2) {
-    const count = 2 - activeHands.length;
-    for (let i = 0; i < count; i++) {
-      const offset = i * Math.PI + t * 0.2;
-      activeHands.push({
-        x: 0.5 + Math.sin(t * 0.4 + offset) * 0.3,
-        y: 0.5 + Math.cos(t * 0.6 + offset) * 0.2,
-        openness: 0.5 + Math.sin(t * 1.5) * 0.3,
-        isPinching: Math.sin(t * 2.5 + offset) > 0.85,
-        isReal: false
-      });
-    }
-  }
-
-  // 5. Interaction
-  let currentHandStates = [];
-  let frameRainEnergy = 0;
-  let maxFreq = 400;
-
-  activeHands.forEach((hand, i) => {
-    let prev = prevHandStates[i];
-    let wiggling = 0;
-    if (prev) {
-      let dx = hand.x - prev.x;
-      let dy = hand.y - prev.y;
-      let dOpen = Math.abs(hand.openness - prev.openness);
-      let movement = Math.sqrt(dx*dx + dy*dy) * 150 * sensitivity;
-      wiggling = dOpen * 80 * sensitivity;
-      let closedness = (1 - hand.openness) * 3 * sensitivity;
-      frameRainEnergy += movement + wiggling + closedness;
-    } else {
-      frameRainEnergy += (1 - hand.openness) * 3;
-    }
-    currentHandStates[i] = { x: hand.x, y: hand.y, openness: hand.openness };
-
-    if (audioCtxStarted) {
-      // Inverted filter mapping: Bottom (y=1) is brighter/more acute
-      maxFreq = Math.max(maxFreq, 400 + hand.y * 7000);
-      const isWiggling = wiggling > 1.5;
-      let bellChance = 0;
-      
-      if (hand.isReal) {
-        if (hand.isPinching) bellChance = 0.3;
-        else if (isWiggling) bellChance = 0.2;
-        else bellChance = 0.02;
-      } else {
-        bellChance = 0.05;
-      }
-
-      if (Math.random() < bellChance) {
-        // Scale shifted higher for more "acute" sound at the bottom
-        const scale = ["G6", "Bb6", "C7", "D7", "E7", "G7", "B7"];
-        const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * scale.length);
-        const note = scale[noteIdx];
-        const velocity = hand.isPinching ? 0.9 : Math.min(1, frameRainEnergy * 0.25);
-        if (audio.bells && note) audio.bells.triggerAttackRelease(note, "8n", Tone.now(), velocity);
-        grid.forEach(p => {
-          if (Math.hypot(p.x - hand.x, p.y - hand.y) < 0.08) p.brightness = 255;
-        });
-      }
-
-      if (isWiggling && Math.random() > 0.9 && t > lastHighBellTime + 0.1) {
-        const highScale = ["C7", "E7", "G7", "B7", "D8", "G8"];
-        const noteIdx = Math.floor(Math.max(0, Math.min(0.999, hand.y)) * highScale.length);
-        const highNote = highScale[noteIdx];
-        if (audio.highBells) audio.highBells.triggerAttackRelease(highNote, "16n", Tone.now(), Math.min(1, frameRainEnergy * 0.4));
-        lastHighBellTime = t;
-      }
-    }
-
-    grid.forEach(p => {
-      const d = Math.hypot(p.x - hand.x, p.y - hand.y);
-      if (d < 0.18) p.brightness = Math.max(p.brightness, (1 - d / 0.18) * 255);
-    });
-  });
-
-  prevHandStates = currentHandStates;
-
-  if (audioCtxStarted) {
-    if (audio.filter) audio.filter.frequency.rampTo(maxFreq, 0.2);
-    smoothedRainEnergy = smoothedRainEnergy * 0.8 + frameRainEnergy * 0.2;
-    const rainVolControl = controls.get('rain_vol') / 100;
-    const targetRainVol = Math.min(1, smoothedRainEnergy * 0.8) * rainVolControl;
-    if (audio.rainGain) audio.rainGain.gain.rampTo(targetRainVol, 0.1);
-    const targetRainFreq = 300 + smoothedRainEnergy * 4000;
-    if (audio.rainFilter) audio.rainFilter.frequency.rampTo(Math.min(10000, targetRainFreq), 0.1);
-  }
-
-  // 6. Render Grid
-  const gridColor = controls.get('grid_color');
-  grid.forEach(p => {
-    if (p.brightness > 1) {
-      const alpha = Math.floor(p.brightness).toString(16).padStart(2, '0');
-      ctx.fillStyle = gridColor + alpha;
-      ctx.beginPath();
-      ctx.arc(p.x * w, p.y * h, 2, 0, Math.PI * 2);
-      ctx.fill();
-      p.brightness *= 0.94;
-    }
-  });
-
-  // 7. Render Hand Landmarks
-  activeHands.forEach(hand => {
-    if (hand.isReal && hand.landmarks) {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.lineWidth = 1.5;
-      const connections = [[0,1,2,3,4], [0,5,6,7,8], [5,9,13,17], [0,17,18,19,20], [9,10,11,12], [13,14,15,16]];
-      connections.forEach(path => {
-        ctx.beginPath();
-        path.forEach((idx, i) => {
-          const lm = hand.landmarks[idx];
-          const lx = (1 - lm.x) * w;
-          const ly = lm.y * h;
-          if (i === 0) ctx.moveTo(lx, ly); else ctx.lineTo(lx, ly);
-        });
-        ctx.stroke();
-      });
-      hand.landmarks.forEach((lm) => {
-        const lx = (1 - lm.x) * w;
-        const ly = lm.y * h;
-        ctx.fillStyle = hand.isPinching ? "#fff" : gridColor;
-        ctx.beginPath();
-        ctx.arc(lx, ly, hand.isPinching ? 6 : 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
-  });
-
-  // 8. Status Indicator
-  if (isStarted) {
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.font = "bold 11px Helvetica, Arial, sans-serif";
-    ctx.textAlign = "left";
-    const status = handLandmarker ? (latestResults && latestResults.landmarks.length > 0 ? "tracking active" : "searching for hands...") : "initializing model...";
-    ctx.fillText(status, 30, h - 30);
-  }
-
-  requestAnimationFrame(draw);
-}
-
-// UI Overlay
-const overlay = document.createElement('div');
-overlay.id = 'start-overlay';
-overlay.style.position = 'absolute';
-overlay.style.top = '0';
-overlay.style.left = '0';
-overlay.style.width = '100%';
-overlay.style.height = '100%';
-overlay.style.background = 'rgba(0,0,0,0.5)';
-overlay.style.backdropFilter = 'blur(15px)';
-overlay.style.display = 'flex';
-overlay.style.flexDirection = 'column';
-overlay.style.alignItems = 'center';
-overlay.style.justifyContent = 'center';
-overlay.style.zIndex = '1000';
-overlay.style.cursor = 'pointer';
-overlay.style.color = 'white';
-overlay.style.fontFamily = '"Helvetica Neue", Helvetica, Arial, sans-serif';
-overlay.style.fontWeight = 'bold';
-overlay.style.transition = 'opacity 0.5s ease';
-
-overlay.innerHTML = `
-  <div id="start-btn-text" style="transition: all 0.4s ease;">
-    start experience
-  </div>
-  <p style="margin-top: 16px; opacity: 0.6; font-size: 0.8rem; letter-spacing: -0.01em;">
-    activate camera & audio
-  </p>
-`;
-
-overlay.onclick = startExperience;
-document.querySelector('.tool-canvas-area').appendChild(overlay);
-
-controls.onChange('imageInput', (url) => { bgImage.src = url; });
-controls.onChange('pulses_active', (active) => {
-  if (audioCtxStarted && audio.pulseLoop) {
-    if (active) audio.pulseLoop.start(0);
-    else audio.pulseLoop.stop();
-  }
-});
-controls.onChange('echo_level', (val) => { if (audioCtxStarted && audio.delay) audio.delay.wet.value = val / 100; });
-controls.onChange('reverb_level', (val) => { if (audioCtxStarted && audio.reverb) audio.reverb.wet.value = val / 100; });
-
-initMediaPipe();
-requestAnimationFrame(draw);
-    }
-
-    
   </script>
 </body>
 </html>
